@@ -14,7 +14,8 @@ Features:
 
 Features that *might* never be implemented:
 1. Define and edit EPG guides (in the same *funstream playlist*).
-2. Docker image or SystemD service
+2. Slow start to exclude not working IPTV channels.
+3. Docker image or SystemD service.
 
 # Build
 
