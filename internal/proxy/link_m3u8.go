@@ -110,8 +110,6 @@ func handleM3U8ChannelData(ctx *fasthttp.RequestCtx, escapedTitle, unescapedTitl
 		return
 	}
 
-	log.Println("Channel type is M3U8 (channel with additional path) and working on it!")
-
 	req, resp, err := getRequest(link, -1)
 	defer fasthttp.ReleaseResponse(resp)
 	defer fasthttp.ReleaseRequest(req)

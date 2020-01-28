@@ -24,11 +24,7 @@ func channelHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	// Debug
-	if len(reqPathParts) > 1 {
-		log.Println("Received channel-only request")
-	} else {
-		log.Println("Received channel-with-data request")
-	}
+	log.Println("Received", reqPathParts)
 
 	// Unescape title
 	unescapedTitle, err := url.QueryUnescape(reqPathParts[0])
@@ -73,13 +69,10 @@ func channelHandler(ctx *fasthttp.RequestCtx) {
 	// Understand what do we need to do with this link
 	switch linkType {
 	case linkTypeMedia:
-		log.Println("Processing type: Media")
 		handleStream(ctx, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
 	case linkTypeStream:
-		log.Println("Processing type: Stream")
 		handleStream(ctx, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
 	case linkTypeM3U8:
-		log.Println("Processing type: M3U8")
 
 		m3u8c := m3u8channels[unescapedTitle]
 
