@@ -2,7 +2,9 @@ package config
 
 import (
 	"errors"
+	"io/ioutil"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -68,4 +70,24 @@ func normalize(s string) string {
 		}
 	}
 	return strings.Join(parts, " ")
+}
+
+// Same as downloadAsString, but also reads from local files
+func retrieveContents(path string) (string, error) {
+	if fileExists(path) {
+		contents, err := ioutil.ReadFile(path)
+		if err != nil {
+			return "", err
+		}
+		return string(contents), nil
+	}
+	return downloadAsString(path)
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }

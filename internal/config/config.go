@@ -167,7 +167,7 @@ func (c *config) fillChannels(p *proxy.Playlist) {
 	for i, v := range c.Playlists {
 		log.Println("Downloading and parsing playlist index", i)
 		// Download playlist:
-		contents, err := downloadAsString(v.URL)
+		contents, err := retrieveContents(v.URL)
 		if err != nil {
 			log.Println("Failed to download playlist: " + err.Error())
 			continue

@@ -58,13 +58,11 @@ func channelHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	// Lock mutex if channel's type is unknown, so no other routine tries to identify it at the same time
-	c.ActiveLink.Mux.Lock()
 	if linkType == linkTypeUnknown {
-		handleLinkUnknown(ctx, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
-		c.ActiveLink.Mux.Unlock()
-		return
+		c.ActiveLink.Mux.Lock()
+		defer c.ActiveLink.Mux.Unlock()
+		linkType = c.ActiveLink.LinkType // In case previous routine updated it
 	}
-	c.ActiveLink.Mux.Unlock()
 
 	// Understand what do we need to do with this link
 	switch linkType {
@@ -90,6 +88,8 @@ func channelHandler(ctx *fasthttp.RequestCtx) {
 			// Channel with data (additional path)
 			handleM3U8ChannelData(ctx, &reqPathParts[0], &unescapedTitle, newLink, m3u8c, c.ActiveLink)
 		}
+	case linkTypeUnknown:
+		handleLinkUnknown(ctx, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
 	case linkTypeUnsupported:
 		ctx.Error("unsupported channel format", http.StatusServiceUnavailable)
 	default:

@@ -69,9 +69,6 @@ func handleM3U8Channel(ctx *fasthttp.RequestCtx, escapedTitle, unescapedTitle *s
 	// Update URL in case we got redirect:
 	c.newRedirectedLink(link)
 
-	// Set timestamp of last session update:
-	c.SetSessionUpdatedNow()
-
 	linkRoot := c.LinkRoot()
 	prefix := "http://" + string(ctx.Host()) + "/iptv/" + *escapedTitle + "/"
 	origContent := string(resp.Body())
@@ -147,9 +144,6 @@ func handleM3U8ChannelData(ctx *fasthttp.RequestCtx, escapedTitle, unescapedTitl
 		cycleAndRetry()
 		return
 	}
-
-	// Set session update timestamp
-	c.SetSessionUpdatedNow()
 
 	// Find content type
 	contentType := string(resp.Header.ContentType())

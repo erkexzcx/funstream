@@ -93,30 +93,7 @@ func (c *M3U8Channel) SetLinkRoot(s string) {
 	c.linkRoot = s
 }
 
-// SessionUpdated ...
-func (c *M3U8Channel) SessionUpdated() time.Time {
-	c.sessionUpdatedMux.RLock()
-	defer c.sessionUpdatedMux.RUnlock()
-	return c.sessionUpdated
-}
-
-// SetSessionUpdatedNow ...
-func (c *M3U8Channel) SetSessionUpdatedNow() {
-	c.sessionUpdatedMux.Lock()
-	defer c.sessionUpdatedMux.Unlock()
-	c.sessionUpdated = time.Now()
-}
-
 // ----------
-
-// SessionValid ...
-func (c *M3U8Channel) SessionValid() bool {
-	s := c.SessionUpdated()
-	if time.Since(s).Seconds() > 30 || s.IsZero() {
-		return false
-	}
-	return true
-}
 
 // LinkCacheValid ...
 func (c *M3U8Channel) LinkCacheValid() bool {
