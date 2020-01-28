@@ -38,7 +38,7 @@ func channelHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	// Find channel
-	c, ok := playlist.Channels[reqPathParts[0]]
+	c, ok := playlist.Channels[unescapedTitle]
 	if !ok {
 		ctx.Error("channel not found", http.StatusNotFound)
 		return
@@ -80,7 +80,23 @@ func channelHandler(ctx *fasthttp.RequestCtx) {
 		handleStream(ctx, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
 	case linkTypeM3U8:
 		log.Println("Processing type: M3U8")
-		ctx.Error("not yet supported", http.StatusNotImplemented) // TODO
+
+		m3u8c := m3u8channels[unescapedTitle]
+
+		var newLink string
+		if len(reqPathParts) == 1 {
+			newLink = m3u8c.Link()
+		} else {
+			newLink = m3u8c.LinkRoot() + reqPathParts[1]
+		}
+
+		if len(reqPathParts) == 1 {
+			// Channel only
+			handleM3U8Channel(ctx, &reqPathParts[0], &unescapedTitle, newLink, m3u8c, c.ActiveLink)
+		} else {
+			// Channel with data (additional path)
+			handleM3U8ChannelData(ctx, &reqPathParts[0], &unescapedTitle, newLink, m3u8c, c.ActiveLink)
+		}
 	case linkTypeUnsupported:
 		ctx.Error("unsupported channel format", http.StatusServiceUnavailable)
 	default:

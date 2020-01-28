@@ -1,9 +1,11 @@
 package proxy
 
 import (
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/valyala/fasthttp"
 )
@@ -77,7 +79,29 @@ func handleLinkUnknown(ctx *fasthttp.RequestCtx, escapedTitle, unescapedTitle *s
 		ctx.Error("Unsupported channel format", http.StatusServiceUnavailable)
 	case linkTypeM3U8:
 		log.Println("Processing type: M3U8")
-		ctx.Error("not yet supported", http.StatusNotImplemented) // TODO
+		defer resp.Body.Close()
+		// Create new M3u8 type channel
+		m3u8c := &M3U8Channel{Channel: c}
+		m3u8channels[*unescapedTitle] = m3u8c
+
+		m3u8c.link = resp.Request.URL.String()
+		m3u8c.linkRoot = deleteAfterLastSlash(m3u8c.link)
+		m3u8c.sessionUpdated = time.Now()
+
+		prefix := "http://" + string(ctx.Host()) + "/iptv/" + *escapedTitle + "/"
+		origContent, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			ctx.Error("internal server error", http.StatusInternalServerError)
+			return
+		}
+		content := []byte(rewriteLinks(string(origContent), prefix, m3u8c.linkRoot))
+
+		ctx.SetContentType(contentType)
+		ctx.SetStatusCode(200)
+		ctx.SetBody(content)
+
+		m3u8c.linkCache = content
+		m3u8c.linkCacheCreated = time.Now()
 	case linkTypeMedia:
 		log.Println("Processing type: Media")
 		handleEstablishedStream(ctx, resp)

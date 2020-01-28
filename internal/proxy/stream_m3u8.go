@@ -139,7 +139,7 @@ func deleteAfterLastSlash(str string) string {
 
 var reURILinkExtract = regexp.MustCompile(`URI="([^"]*)"`)
 
-func rewriteLinks(prefix string, localPrefix string, linkRoot string, scanner *bufio.Scanner) string {
+func rewriteLinks(origContent, prefix, linkRoot string) string {
 	var sb strings.Builder
 
 	linkRootURL, _ := url.Parse(linkRoot) // It will act as a base URL for full URLs
@@ -161,17 +161,10 @@ func rewriteLinks(prefix string, localPrefix string, linkRoot string, scanner *b
 			l = link
 		}
 
-		// Preload contents into a cache
-		// TODO
-		// go func() {
-		// 	if resp, err := m3u8HTTPClient.Get(localPrefix + l); err == nil {
-		// 		resp.Body.Close()
-		// 	}
-		// }()
-
 		return prefix + l
 	}
 
+	scanner := bufio.NewScanner(strings.NewReader(origContent))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if !strings.HasPrefix(line, "#") {

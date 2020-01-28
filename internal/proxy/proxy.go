@@ -18,7 +18,7 @@ func (p *Playlist) Start(port, userAgentString string) {
 
 	// Some global vars
 	m3u8channels = make(map[string]*M3U8Channel, len(p.Channels))
-	m3u8TSCache = cache.New(time.Minute, 10*time.Second) // Store cache for 1 minute and clear every 10 seconds
+	m3u8TSCache = cache.New(30*time.Second, 10*time.Second) // Store cache for 1 minute and clear every 10 seconds
 
 	m := func(ctx *fasthttp.RequestCtx) {
 		path := string(ctx.Path())

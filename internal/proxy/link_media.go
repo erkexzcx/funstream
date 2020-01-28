@@ -30,7 +30,6 @@ func handleStream(ctx *fasthttp.RequestCtx, escapedTitle, unescapedTitle *string
 
 	log.Println("Channel type is Media/Stream and working on it!")
 
-	// We don't know what to expect, so just load URL and check content type of response
 	resp, err := getRequestStandard(link, -1)
 	if err != nil {
 		log.Println("Failed to request link. Cycling and retrying...")
@@ -75,8 +74,9 @@ func handleStream(ctx *fasthttp.RequestCtx, escapedTitle, unescapedTitle *string
 }
 
 func handleEstablishedStream(ctx *fasthttp.RequestCtx, resp *http.Response) {
-	//defer resp.Body.Close()
-	// How TF should I close connection, if below is not blocking?
+	// TODO - resource leak here - resp.Body is not closed.
+	// How TF should I do it??? Any other solution just prevents VLC player
+	// from playing content if I close... :/
 
 	ctx.SetStatusCode(http.StatusOK)
 	ctx.SetContentType(resp.Header.Get("Content-Type"))
