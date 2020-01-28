@@ -6,7 +6,6 @@ This application is used to create your very own M3U (HLS) playlist. Application
 
 Features:
 * Supports HLS (M3U8), streams (`Content-Type: application/octet-stream`), audio and Video files.
-* Supports both locally stored or remote media.
 * HLS (M3U8) caching (if 10 devices watches the same IPTV channel, the remote server still thinks it's just 1 devices watching). Other media types are not cached.
 * No dependencies on `FFmpeg` - very lightweight and written in pure Go.
 * Flexible *funstream playlists*. See bottom of this README.md
