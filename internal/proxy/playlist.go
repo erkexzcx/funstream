@@ -70,6 +70,7 @@ func (c *Channel) cycleLinkNoMux() bool {
 
 	c.CycleCount++
 	if c.CycleCount >= len(c.Links)*2 {
+		c.CycleCount = 0
 		return false
 	}
 	return true
