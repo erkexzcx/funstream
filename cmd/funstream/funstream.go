@@ -12,6 +12,8 @@ var userAgent = flag.String("useragent", "VLC/3.0.2.LibVLC/3.0.2", "custom user 
 var playlistPath = flag.String("playlist", "funstream_playlist.yaml", "path to the playlist")
 
 func main() {
+	flag.Parse()
+
 	// Get playlist
 	p, err := config.Playlist(*playlistPath, *userAgent)
 	if err != nil {
