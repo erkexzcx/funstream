@@ -1,3 +1,5 @@
+**Disclaimer 1 - features, command line options and playlist format is likelly going to change in the near future once more testing and feedback is received. This also means that I will not provide binaries for a while, since everything is a subject to change.**
+
 # funstream
 
 This app allows you to create your very own M3U playlist out of various bits - media files, M3U playlists, channels, streams. It also allows you to rename or exclude both groups and separate channels, override logos etc.
@@ -6,8 +8,6 @@ Supported media types:
 * HLS (M3U8)
 * Streams (`Content-Type: application/octet-stream`)
 * Audio or Video files
-
-**Disclaimer 1 - features, command line options and playlist format is likelly going to change in the near future once more testing and feedback is received. This also means that I will not provide binaries for a while, since everything is a subject to change.**
 
 # Roadmap
 
