@@ -35,3 +35,12 @@ Execute binary. These command-line options are not mandatory and use only if nee
 # Playlist customization
 
 See [funstream_playlist.example.yaml](https://github.com/erkexzcx/funstream/blob/master/funstream_playlist.example.yaml).
+
+You don't need to explicitly define all values. For example, this simple one-channel `yaml` file would perfectly work:
+```
+channels:
+  - title: ExampleTV
+    url: http://example.com/path/to/stream.m3u8
+    logo: http://example.com/logos/exampletv.png
+    group: Example TVs
+```
