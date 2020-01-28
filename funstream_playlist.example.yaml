@@ -1,0 +1,64 @@
+# Funstream config file example
+# This file attempts to list all available features within funstream config file
+# Note that all fields (except URLs/paths) are case insensitive!
+
+# Default group title for channels with empty group title or when group title is not set
+default_group: Unknown
+
+# Default logo value when it's empty or not set 
+default_logo: http://example.com/generic_iptv.png
+
+# Define logos for channels. It can also be used to override existing logos if
+# needed, or if channel does not have logo.
+# Note 1: If you rename channels, then put new channels names here
+# Note 2: These channel to logo mappings has highest priority
+logos:
+  - channel: NASA HD
+    logo: http://example.com/nasa.png
+  - channel: SpaceX
+    logo: http://example.com/spacex.png
+
+# These channels will ignore ordered sort and will be shown at the top of the channels list
+# Note 1: If you rename channels, then put new channels names here
+display_first:
+  - Channel 1
+  - Channel 2
+  - Channel 3
+
+# Define M3U8 channels
+channels:
+  - title: Channel 1                            # 'title' is mandatory.
+    url: https://cdn.example.com/channel1.m3u8  # 'url'   is mandatory.
+    logo: https://example.com/channel1.png      # 'logo'  is optional. If you define here, then you don't need to define in 'logos'
+    group: Lithuanian                           # 'group' is optional.
+  - title: Channel 2
+    url: https://cdn.example.com/channel3.m3u8
+  - title: Channel 3
+    url: https://cdn.example.com/channel3.m3u8
+    logo: https://example.com/channel3.png
+
+# Define M3U playlists
+playlists:
+  - url: http://example.com/playlist.m3u
+    rename_channels:
+      - from: Channel 1 TEST
+        to: Channel 1
+      - from: Channel 2 HD
+        to: Channel 2
+    rename_groups:
+      - from: XXX
+        to: Porn
+      - from: Test
+        to: Unknown
+    exclude_channels: # If you rename channels, then put new channels names here
+      - TEST Channel
+      - TEST Channel 2
+      - TEST Channel 3 HD
+    exclude_groups: # If you rename groups, then put new group names here
+      - Unknown
+      - XXX
+      - Porn
+  - url: /home/myuser/mysecretplaylist.m3u
+  - url: http://example.com/superduperplaylist.m3u
+    exclude:
+      - TEST Channel
