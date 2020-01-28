@@ -34,4 +34,4 @@ Execute binary. These command-line options are not mandatory and use only if nee
 
 # Playlist customization
 
-See funstream_playlist.example.yaml.
+See [funstream_playlist.example.yaml](https://github.com/erkexzcx/funstream/blob/master/funstream_playlist.example.yaml).
