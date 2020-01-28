@@ -7,7 +7,7 @@ Supported media types:
 * Streams (`Content-Type: application/octet-stream`)
 * Audio or Video files
 
-**Disclaimer 1** - features, command line options and playlist format is likelly going to change in the near future once more testing and feedback is received. This also means that I will not provide binaries for a while, since everything is a subject to change.
+**Disclaimer 1 - features, command line options and playlist format is likelly going to change in the near future once more testing and feedback is received. This also means that I will not provide binaries for a while, since everything is a subject to change.**
 
 # Roadmap
 
