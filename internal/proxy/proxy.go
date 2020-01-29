@@ -1,7 +1,9 @@
 package proxy
 
 import (
+	"fmt"
 	"log"
+	"net"
 	"strings"
 	"time"
 
@@ -35,5 +37,26 @@ func (p *Playlist) Start(port, userAgentString string) {
 	}
 
 	log.Println("Web server should be started by now!")
+
+	printAvailableAddresses(port)
+
 	panic(fasthttp.ListenAndServe(":"+port, m))
+}
+
+func printAvailableAddresses(port string) {
+	fmt.Println()
+	fmt.Println("Available URLs:")
+	addresses, err := net.InterfaceAddrs()
+	if err != nil {
+		fmt.Println("\tUnable to retrieve IP addresses...")
+		return
+	}
+	for _, v := range addresses {
+		address := v.String()
+		if strings.Contains(address, "::") {
+			continue
+		}
+		fmt.Println("\thttp://" + strings.SplitN(address, "/", 2)[0] + ":" + port + "/iptv")
+	}
+	fmt.Println()
 }
