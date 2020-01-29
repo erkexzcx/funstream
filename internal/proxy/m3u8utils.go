@@ -32,9 +32,6 @@ type M3U8Channel struct {
 
 	linkRoot    string
 	linkRootMux sync.RWMutex
-
-	sessionUpdated    time.Time
-	sessionUpdatedMux sync.RWMutex
 }
 
 // Link ...

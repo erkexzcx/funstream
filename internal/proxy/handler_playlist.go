@@ -16,6 +16,6 @@ func playlistHandler(ctx *fasthttp.RequestCtx) {
 	for _, title := range playlist.OrderedTitles {
 		link := "http://" + string(ctx.Host()) + "/iptv/" + url.QueryEscape(title)
 		logo := "http://" + string(ctx.Host()) + "/logo/" + url.QueryEscape(title)
-		fmt.Fprintf(ctx, "#EXTINF:-1 tvg-logo=\"%s\" group-title=\"%s\", %s\n%s\n", logo, (playlist.Channels[title]).Group, title, link)
+		fmt.Fprintf(ctx, "#EXTINF:-1 tvg-logo=\"%s\" group-title=\"%s\", %s\n%s\n", logo, playlist.Channels[title].Group, title, link)
 	}
 }

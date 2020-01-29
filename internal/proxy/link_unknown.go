@@ -86,7 +86,6 @@ func handleLinkUnknown(ctx *fasthttp.RequestCtx, escapedTitle, unescapedTitle *s
 
 		m3u8c.link = resp.Request.URL.String()
 		m3u8c.linkRoot = deleteAfterLastSlash(m3u8c.link)
-		m3u8c.sessionUpdated = time.Now()
 
 		prefix := "http://" + string(ctx.Host()) + "/iptv/" + *escapedTitle + "/"
 		origContent, err := ioutil.ReadAll(resp.Body)
