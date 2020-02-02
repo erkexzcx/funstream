@@ -2,71 +2,49 @@ package proxy
 
 import (
 	"errors"
+	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
-
-	"github.com/valyala/fasthttp"
 )
 
-func downloadAsBytes(u string) (content []byte, contentType []byte, err error) {
-	req := fasthttp.AcquireRequest()
-	resp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseResponse(resp)
-	defer fasthttp.ReleaseRequest(req)
-
-	req.SetRequestURI(u)
-	req.Header.Add("User-Agent", userAgent)
-
-	if err := fasthttp.DoTimeout(req, resp, 10*time.Second); err != nil {
-		return nil, nil, err
-	}
-
-	statusCode := resp.StatusCode()
-	if statusCode == 200 {
-		// Success
-		return resp.Body(), resp.Header.ContentType(), nil
-	} else if statusCode >= 300 && statusCode < 400 {
-		// Redirection
-		myURL, err := url.Parse(u)
-		if err != nil {
-			return nil, nil, err
-		}
-		nextURL, err := url.Parse(string(resp.Header.Peek("Location")))
-		if err != nil {
-			return nil, nil, err
-		}
-		newURL := myURL.ResolveReference(nextURL)
-		return downloadAsBytes(newURL.String())
-	}
-	return nil, nil, errors.New(u + " returned HTTP code " + strconv.Itoa(statusCode))
+var httpClient = &http.Client{
+	Timeout: time.Second * 10,
 }
 
-func downloadAsString(u string) (content string, contentType []byte, err error) {
-	contents, contentType, err := downloadAsBytes(u)
+func download(link string) (content []byte, contentType string, err error) {
+	req, err := http.NewRequest("GET", link, nil)
 	if err != nil {
-		return "", nil, err
+		return nil, "", err
 	}
-	return string(contents), contentType, nil
-}
 
-func getRequest(link string, timeout time.Duration) (req *fasthttp.Request, resp *fasthttp.Response, err error) {
-	resp = fasthttp.AcquireResponse()
-	req = fasthttp.AcquireRequest()
+	req.Header.Set("User-Agent", userAgent)
 
-	req.SetRequestURI(link)
-	req.Header.Add("User-Agent", userAgent)
-
-	if timeout <= 0 {
-		err = fasthttp.Do(req, resp)
-		return
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, "", err
 	}
-	err = fasthttp.DoTimeout(req, resp, timeout)
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, "", errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
+	}
+
+	contentType = resp.Header.Get("Content-Type")
+	content, err = ioutil.ReadAll(resp.Body)
 	return
 }
 
-func getRequestStandard(link string, timeout time.Duration) (*http.Response, error) {
+func downloadString(link string) (content string, contentType string, err error) {
+	var contentBytes []byte
+	contentBytes, contentType, err = download(link)
+	if err != nil {
+		return "", "", err
+	}
+	return string(contentBytes), contentType, nil
+}
+
+func getResponse(link string, timeout time.Duration) (*http.Response, error) {
 	client := &http.Client{}
 	if timeout <= 0 {
 		client.Timeout = 10 * time.Second
@@ -76,7 +54,17 @@ func getRequestStandard(link string, timeout time.Duration) (*http.Response, err
 	if err != nil {
 		return nil, err
 	}
+
 	req.Header.Set("User-Agent", userAgent)
 
-	return client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
+	}
+
+	return resp, nil
 }

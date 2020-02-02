@@ -5,21 +5,14 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/valyala/fasthttp"
 )
 
-func quickWrite(ctx *fasthttp.RequestCtx, content []byte, contentType string, httpStatus int) {
-	ctx.SetContentType(contentType)
-	ctx.SetStatusCode(httpStatus)
-	ctx.SetBody(content)
-}
-
-func channelHandler(ctx *fasthttp.RequestCtx) {
-	reqPath := strings.Replace(string(ctx.RequestURI()), "/iptv/", "", 1)
+func channelHandler(w http.ResponseWriter, r *http.Request) {
+	reqPath := strings.Replace(r.URL.Path, "/iptv/", "", 1)
 	reqPathParts := strings.SplitN(reqPath, "/", 2)
 	if len(reqPathParts) == 0 {
-		ctx.Error("not found", fasthttp.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("not found"))
 		return
 	}
 
@@ -29,14 +22,16 @@ func channelHandler(ctx *fasthttp.RequestCtx) {
 	// Unescape title
 	unescapedTitle, err := url.QueryUnescape(reqPathParts[0])
 	if err != nil {
-		ctx.Error("invalid request", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid request"))
 		return
 	}
 
 	// Find channel
 	c, ok := playlist.Channels[unescapedTitle]
 	if !ok {
-		ctx.Error("channel not found", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("channel not found"))
 		return
 	}
 
@@ -53,7 +48,8 @@ func channelHandler(ctx *fasthttp.RequestCtx) {
 
 	// Error if channel type is unknown and request URL contains additional path
 	if linkType == linkTypeUnknown && len(reqPathParts) == 2 {
-		ctx.Error("invalid request", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid request"))
 		return
 	}
 
@@ -66,10 +62,12 @@ func channelHandler(ctx *fasthttp.RequestCtx) {
 
 	// Understand what do we need to do with this link
 	switch linkType {
+	case linkTypeUnknown:
+		handleLinkUnknown(w, r, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
 	case linkTypeMedia:
-		handleStream(ctx, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
+		handleStream(w, r, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
 	case linkTypeStream:
-		handleStream(ctx, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
+		handleStream(w, r, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
 	case linkTypeM3U8:
 
 		m3u8c := m3u8channels[unescapedTitle]
@@ -83,16 +81,16 @@ func channelHandler(ctx *fasthttp.RequestCtx) {
 
 		if len(reqPathParts) == 1 {
 			// Channel only
-			handleM3U8Channel(ctx, &reqPathParts[0], &unescapedTitle, newLink, m3u8c, c.ActiveLink)
+			handleM3U8Channel(w, r, &reqPathParts[0], &unescapedTitle, newLink, m3u8c, c.ActiveLink)
 		} else {
 			// Channel with data (additional path)
-			handleM3U8ChannelData(ctx, &reqPathParts[0], &unescapedTitle, newLink, m3u8c, c.ActiveLink)
+			handleM3U8ChannelData(w, r, &reqPathParts[0], &unescapedTitle, newLink, m3u8c, c.ActiveLink)
 		}
-	case linkTypeUnknown:
-		handleLinkUnknown(ctx, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
 	case linkTypeUnsupported:
-		ctx.Error("unsupported channel format", http.StatusServiceUnavailable)
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write([]byte("unsupported channel format"))
 	default:
-		ctx.Error("internal server error", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("internal server error"))
 	}
 }

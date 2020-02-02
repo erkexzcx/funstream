@@ -7,11 +7,9 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/patrickmn/go-cache"
 )
 
-var m3u8TSCache *cache.Cache
+const m3U8Timeout = 3 * time.Second
 
 var m3u8channels map[string]*M3U8Channel
 
@@ -23,12 +21,6 @@ type M3U8Channel struct {
 
 	link    string
 	linkMux sync.RWMutex
-
-	linkCache    []byte
-	linkCacheMux sync.RWMutex
-
-	linkCacheCreated    time.Time
-	linkCacheCreatedMux sync.RWMutex
 
 	linkRoot    string
 	linkRootMux sync.RWMutex
@@ -48,34 +40,6 @@ func (c *M3U8Channel) SetLink(s string) {
 	c.link = s
 }
 
-// LinkCache ...
-func (c *M3U8Channel) LinkCache() []byte {
-	c.linkCacheMux.RLock()
-	defer c.linkCacheMux.RUnlock()
-	return c.linkCache
-}
-
-// SetLinkCache ...
-func (c *M3U8Channel) SetLinkCache(b []byte) {
-	c.linkCacheMux.Lock()
-	defer c.linkCacheMux.Unlock()
-	c.linkCache = b
-}
-
-// LinkCacheCreated ...
-func (c *M3U8Channel) LinkCacheCreated() time.Time {
-	c.linkCacheCreatedMux.RLock()
-	defer c.linkCacheCreatedMux.RUnlock()
-	return c.linkCacheCreated
-}
-
-// SetLinkCacheCreatedNow ...
-func (c *M3U8Channel) SetLinkCacheCreatedNow() {
-	c.linkCacheCreatedMux.Lock()
-	defer c.linkCacheCreatedMux.Unlock()
-	c.linkCacheCreated = time.Now()
-}
-
 // LinkRoot ...
 func (c *M3U8Channel) LinkRoot() string {
 	c.linkRootMux.RLock()
@@ -92,15 +56,6 @@ func (c *M3U8Channel) SetLinkRoot(s string) {
 
 // ----------
 
-// LinkCacheValid ...
-func (c *M3U8Channel) LinkCacheValid() bool {
-	s := c.LinkCacheCreated()
-	if time.Since(s).Seconds() > 1 || s.IsZero() {
-		return false
-	}
-	return true
-}
-
 // Link ...
 func (c *M3U8Channel) newRedirectedLink(s string) {
 	c.SetLink(s)
@@ -113,7 +68,7 @@ func deleteAfterLastSlash(str string) string {
 
 var reURILinkExtract = regexp.MustCompile(`URI="([^"]*)"`)
 
-func rewriteLinks(origContent, prefix, linkRoot string) string {
+func rewriteLinks(scanner *bufio.Scanner, prefix, linkRoot string) string {
 	var sb strings.Builder
 
 	linkRootURL, _ := url.Parse(linkRoot) // It will act as a base URL for full URLs
@@ -138,7 +93,6 @@ func rewriteLinks(origContent, prefix, linkRoot string) string {
 		return prefix + l
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(origContent))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if !strings.HasPrefix(line, "#") {

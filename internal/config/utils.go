@@ -3,50 +3,40 @@ package config
 import (
 	"errors"
 	"io/ioutil"
-	"net/url"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/valyala/fasthttp"
 )
 
-func downloadAsBytes(u string) ([]byte, error) {
-	req := fasthttp.AcquireRequest()
-	resp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseResponse(resp)
-	defer fasthttp.ReleaseRequest(req)
+var httpClient = &http.Client{
+	Timeout: time.Second * 10,
+}
 
-	req.SetRequestURI(u)
-	req.Header.Add("User-Agent", userAgent)
-
-	if err := fasthttp.DoTimeout(req, resp, 10*time.Second); err != nil {
+func download(link string) ([]byte, error) {
+	req, err := http.NewRequest("GET", link, nil)
+	if err != nil {
 		return nil, err
 	}
 
-	statusCode := resp.StatusCode()
-	if statusCode == 200 {
-		// Success
-		return resp.Body(), nil
-	} else if statusCode >= 300 && statusCode < 400 {
-		// Redirection
-		myURL, err := url.Parse(u)
-		if err != nil {
-			return nil, err
-		}
-		nextURL, err := url.Parse(string(resp.Header.Peek("Location")))
-		if err != nil {
-			return nil, err
-		}
-		newURL := myURL.ResolveReference(nextURL)
-		return downloadAsBytes(newURL.String())
+	req.Header.Set("User-Agent", userAgent)
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
 	}
-	return nil, errors.New(u + " returned HTTP code " + strconv.Itoa(statusCode))
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
+	}
+
+	return ioutil.ReadAll(resp.Body)
 }
 
-func downloadAsString(u string) (string, error) {
-	contents, err := downloadAsBytes(u)
+func downloadString(link string) (string, error) {
+	contents, err := download(link)
 	if err != nil {
 		return "", err
 	}
@@ -81,7 +71,7 @@ func retrieveContents(path string) (string, error) {
 		}
 		return string(contents), nil
 	}
-	return downloadAsString(path)
+	return downloadString(path)
 }
 
 func fileExists(filename string) bool {

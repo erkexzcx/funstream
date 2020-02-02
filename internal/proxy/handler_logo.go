@@ -4,22 +4,22 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/valyala/fasthttp"
 )
 
-func logoHandler(ctx *fasthttp.RequestCtx) {
-	title := strings.Replace(string(ctx.RequestURI()), "/logo/", "", 1)
+func logoHandler(w http.ResponseWriter, r *http.Request) {
+	title := strings.Replace(r.URL.Path, "/logo/", "", 1)
 	unescapedTitle, err := url.QueryUnescape(title)
 	if err != nil {
-		ctx.Error("Invalid request", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid request"))
 		return
 	}
 
 	// Find channel reference
 	channel, ok := playlist.Channels[unescapedTitle]
 	if !ok {
-		ctx.Error("Channel not found", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("channel not found"))
 		return
 	}
 
@@ -27,17 +27,16 @@ func logoHandler(ctx *fasthttp.RequestCtx) {
 	channel.LogoCacheMux.Lock()
 	defer channel.LogoCacheMux.Unlock()
 	if len(channel.LogoCache) == 0 {
-		img, contentType, err := downloadAsBytes(channel.Logo)
+		img, contentType, err := download(channel.Logo)
 		if err != nil {
-			ctx.Error("Unable to serve logo", http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("internal server error"))
 			return
 		}
 		channel.LogoCache = img
 		channel.LogoCacheContentType = contentType
-		ctx.SetContentTypeBytes(contentType)
-		ctx.SetBody(img)
-	} else {
-		ctx.SetContentTypeBytes(channel.LogoCacheContentType)
-		ctx.SetBody(channel.LogoCache)
 	}
+
+	w.Header().Set("Content-Type", channel.LogoCacheContentType)
+	w.Write(channel.LogoCache)
 }

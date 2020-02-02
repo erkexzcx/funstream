@@ -42,7 +42,7 @@ type Channel struct {
 
 	Logo                 string
 	LogoCache            []byte
-	LogoCacheContentType []byte
+	LogoCacheContentType string
 	LogoCacheMux         sync.Mutex
 	Group                string
 }
