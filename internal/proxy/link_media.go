@@ -32,7 +32,10 @@ func handleStream(w http.ResponseWriter, r *http.Request, escapedTitle, unescape
 
 func handleEstablishedStream(w http.ResponseWriter, r *http.Request, resp *http.Response) {
 	defer resp.Body.Close()
+
+	for k, v := range resp.Header {
+		w.Header().Set(k, v[0])
+	}
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
 	io.Copy(w, resp.Body)
 }

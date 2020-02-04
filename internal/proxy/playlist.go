@@ -27,6 +27,7 @@ type Playlist struct {
 type Link struct {
 	Link     string
 	LinkType int
+	M3U8C    *M3U8Channel
 	Mux      sync.RWMutex
 }
 

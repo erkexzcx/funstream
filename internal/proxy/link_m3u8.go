@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -40,8 +41,11 @@ func handleM3U8Channel(w http.ResponseWriter, r *http.Request, escapedTitle, une
 	prefix := "http://" + r.Host + "/iptv/" + *escapedTitle + "/"
 	content := rewriteLinks(bufio.NewScanner(resp.Body), prefix, linkRoot)
 
-	w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
-	w.Write([]byte(content))
+	for k, v := range resp.Header {
+		w.Header().Set(k, v[0])
+	}
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, content)
 }
 
 func handleM3U8ChannelData(w http.ResponseWriter, r *http.Request, escapedTitle, unescapedTitle *string, link string, c *M3U8Channel, l *Link) {
@@ -70,7 +74,7 @@ func handleM3U8ChannelData(w http.ResponseWriter, r *http.Request, escapedTitle,
 	contentTypeOrig := resp.Header.Get("Content-Type")
 	contentType := strings.ToLower(contentTypeOrig)
 
-	if (contentType == "application/vnd.apple.mpegurl" || contentType == "application/x-mpegurl") && strings.Contains(link, ".m3u8") {
+	if contentType == "application/vnd.apple.mpegurl" || contentType == "application/x-mpegurl" {
 		// If we reach this code block - it means we got redirect without HTTP code 3**
 		c.newRedirectedLink(link)
 
@@ -78,12 +82,19 @@ func handleM3U8ChannelData(w http.ResponseWriter, r *http.Request, escapedTitle,
 		prefix := "http://" + r.Host + "/iptv/" + *escapedTitle + "/"
 		content := rewriteLinks(bufio.NewScanner(resp.Body), prefix, linkRoot)
 
-		w.Header().Set("Content-Type", contentType)
-		w.Write([]byte(content))
-	} else if strings.HasPrefix(contentType, "video/") || strings.HasPrefix(contentType, "audio/") {
-		// TS files
+		for k, v := range resp.Header {
+			w.Header().Set(k, v[0])
+		}
 		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", contentTypeOrig)
+		fmt.Fprint(w, content)
+	} else {
+		// video/audio/text(subtitles) or anything else...
+		defer resp.Body.Close()
+
+		for k, v := range resp.Header {
+			w.Header().Set(k, v[0])
+		}
+		w.WriteHeader(resp.StatusCode)
 		io.Copy(w, resp.Body)
 	}
 

@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -43,7 +44,7 @@ func handleLinkUnknown(w http.ResponseWriter, r *http.Request, escapedTitle, une
 
 		// Create new M3u8 type channel
 		m3u8c := &M3U8Channel{Channel: c}
-		m3u8channels[*unescapedTitle] = m3u8c
+		c.ActiveLink.M3U8C = m3u8c
 
 		m3u8c.link = resp.Request.URL.String()
 		m3u8c.linkRoot = deleteAfterLastSlash(m3u8c.link)
@@ -51,9 +52,11 @@ func handleLinkUnknown(w http.ResponseWriter, r *http.Request, escapedTitle, une
 		prefix := "http://" + r.Host + "/iptv/" + *escapedTitle + "/"
 		content := rewriteLinks(bufio.NewScanner(resp.Body), prefix, m3u8c.linkRoot)
 
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
-		w.Write([]byte(content))
+		for k, v := range resp.Header {
+			w.Header().Set(k, v[0])
+		}
+		w.WriteHeader(resp.StatusCode)
+		fmt.Fprint(w, content)
 	case linkTypeMedia:
 		log.Println("Processing type: Media")
 		handleEstablishedStream(w, r, resp)

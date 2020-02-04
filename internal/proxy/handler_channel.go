@@ -24,6 +24,7 @@ func channelHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid request"))
+		log.Println("unable to escape title")
 		return
 	}
 
@@ -50,6 +51,7 @@ func channelHandler(w http.ResponseWriter, r *http.Request) {
 	if linkType == linkTypeUnknown && len(reqPathParts) == 2 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid request"))
+		log.Println("channel type is unknown and request URL contains additional path")
 		return
 	}
 
@@ -70,7 +72,9 @@ func channelHandler(w http.ResponseWriter, r *http.Request) {
 		handleStream(w, r, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
 	case linkTypeM3U8:
 
-		m3u8c := m3u8channels[unescapedTitle]
+		c.ActiveLink.Mux.RLock()
+		m3u8c := c.ActiveLink.M3U8C
+		c.ActiveLink.Mux.RUnlock()
 
 		var newLink string
 		if len(reqPathParts) == 1 {
