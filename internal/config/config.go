@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/erkexzcx/funstream/internal/proxy"
 	"gopkg.in/yaml.v2"
@@ -246,6 +247,11 @@ func parseRawChannel(rawChannel string) (logo, group, title, link string) {
 		title = matchTitleAndLink[0][1]
 		link = matchTitleAndLink[0][2]
 	}
+
+	logo = strings.TrimSpace(logo)
+	group = strings.TrimSpace(group)
+	title = strings.TrimSpace(title)
+	link = strings.TrimSpace(link)
 
 	return
 }
