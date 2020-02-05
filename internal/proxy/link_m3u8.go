@@ -43,7 +43,7 @@ func handleM3U8Channel(w http.ResponseWriter, r *http.Request, title *string, li
 	content := rewriteLinks(bufio.NewScanner(resp.Body), prefix, linkRoot)
 
 	for k, v := range resp.Header {
-		w.Header().Set(k, v[0])
+		w.Header().Set(k, strings.Join(v, "; "))
 	}
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, content)
@@ -93,7 +93,7 @@ func handleM3U8ChannelData(w http.ResponseWriter, r *http.Request, title *string
 		defer resp.Body.Close()
 
 		for k, v := range resp.Header {
-			w.Header().Set(k, v[0])
+			w.Header().Set(k, strings.Join(v, "; "))
 		}
 		w.WriteHeader(resp.StatusCode)
 		io.Copy(w, resp.Body)

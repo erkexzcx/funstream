@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func handleStream(w http.ResponseWriter, r *http.Request, link string, c *Channel, l *Link) {
@@ -34,8 +35,8 @@ func handleEstablishedStream(w http.ResponseWriter, r *http.Request, resp *http.
 	defer resp.Body.Close()
 
 	for k, v := range resp.Header {
-		w.Header().Set(k, v[0])
+		w.Header().Set(k, strings.Join(v, "; "))
 	}
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(resp.StatusCode)
 	io.Copy(w, resp.Body)
 }

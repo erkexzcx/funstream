@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // Mutex is locked when working in this function!
@@ -54,7 +55,7 @@ func handleLinkUnknown(w http.ResponseWriter, r *http.Request, title *string, li
 		content := rewriteLinks(bufio.NewScanner(resp.Body), prefix, m3u8c.linkRoot)
 
 		for k, v := range resp.Header {
-			w.Header().Set(k, v[0])
+			w.Header().Set(k, strings.Join(v, "; "))
 		}
 		w.WriteHeader(resp.StatusCode)
 		fmt.Fprint(w, content)
