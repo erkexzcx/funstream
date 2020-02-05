@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func handleStream(w http.ResponseWriter, r *http.Request, escapedTitle, unescapedTitle *string, link string, c *Channel, l *Link) {
+func handleStream(w http.ResponseWriter, r *http.Request, link string, c *Channel, l *Link) {
 	cycleAndRetry := func() {
 		// Link is not working - try to switch to the next one and reload
 		res := c.cycleLink()
@@ -17,7 +17,7 @@ func handleStream(w http.ResponseWriter, r *http.Request, escapedTitle, unescape
 		}
 		l = c.ActiveLink
 		newLink := l.Link
-		handleStream(w, r, escapedTitle, unescapedTitle, newLink, c, l)
+		handleStream(w, r, newLink, c, l)
 	}
 
 	resp, err := getResponse(link, m3U8Timeout)

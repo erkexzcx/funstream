@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 // Mutex is locked when working in this function!
-func handleLinkUnknown(w http.ResponseWriter, r *http.Request, escapedTitle, unescapedTitle *string, link string, c *Channel, l *Link) {
+func handleLinkUnknown(w http.ResponseWriter, r *http.Request, title *string, link string, c *Channel, l *Link) {
 	cycleAndRetry := func() {
 		// Link is not working - try to switch to the next one and reload
 		res := c.cycleLinkNoMux()
@@ -19,7 +20,7 @@ func handleLinkUnknown(w http.ResponseWriter, r *http.Request, escapedTitle, une
 		}
 		l = c.ActiveLink
 		newLink := l.Link
-		handleLinkUnknown(w, r, escapedTitle, unescapedTitle, newLink, c, l)
+		handleLinkUnknown(w, r, title, newLink, c, l)
 	}
 
 	// We don't know what to expect, so just load URL and check content type of response
@@ -49,7 +50,7 @@ func handleLinkUnknown(w http.ResponseWriter, r *http.Request, escapedTitle, une
 		m3u8c.link = resp.Request.URL.String()
 		m3u8c.linkRoot = deleteAfterLastSlash(m3u8c.link)
 
-		prefix := "http://" + r.Host + "/iptv/" + *escapedTitle + "/"
+		prefix := "http://" + r.Host + "/iptv/" + url.PathEscape(*title) + "/"
 		content := rewriteLinks(bufio.NewScanner(resp.Body), prefix, m3u8c.linkRoot)
 
 		for k, v := range resp.Header {

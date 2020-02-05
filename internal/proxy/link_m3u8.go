@@ -6,10 +6,11 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
-func handleM3U8Channel(w http.ResponseWriter, r *http.Request, escapedTitle, unescapedTitle *string, link string, c *M3U8Channel, l *Link) {
+func handleM3U8Channel(w http.ResponseWriter, r *http.Request, title *string, link string, c *M3U8Channel, l *Link) {
 	cycleAndRetry := func() {
 		// Link is not working - try to switch to the next one and reload
 		res := c.Channel.cycleLink()
@@ -20,7 +21,7 @@ func handleM3U8Channel(w http.ResponseWriter, r *http.Request, escapedTitle, une
 		}
 		l = c.Channel.ActiveLink
 		newLink := l.Link
-		handleM3U8Channel(w, r, escapedTitle, unescapedTitle, newLink, c, l)
+		handleM3U8Channel(w, r, title, newLink, c, l)
 	}
 
 	resp, err := getResponse(link, m3U8Timeout)
@@ -38,7 +39,7 @@ func handleM3U8Channel(w http.ResponseWriter, r *http.Request, escapedTitle, une
 	}
 
 	linkRoot := c.LinkRoot()
-	prefix := "http://" + r.Host + "/iptv/" + *escapedTitle + "/"
+	prefix := "http://" + r.Host + "/iptv/" + url.PathEscape(*title) + "/"
 	content := rewriteLinks(bufio.NewScanner(resp.Body), prefix, linkRoot)
 
 	for k, v := range resp.Header {
@@ -48,7 +49,7 @@ func handleM3U8Channel(w http.ResponseWriter, r *http.Request, escapedTitle, une
 	fmt.Fprint(w, content)
 }
 
-func handleM3U8ChannelData(w http.ResponseWriter, r *http.Request, escapedTitle, unescapedTitle *string, link string, c *M3U8Channel, l *Link) {
+func handleM3U8ChannelData(w http.ResponseWriter, r *http.Request, title *string, link string, c *M3U8Channel, l *Link) {
 	cycleAndRetry := func() {
 		// Link is not working - try to switch to the next one and reload
 		res := c.Channel.cycleLink()
@@ -59,7 +60,7 @@ func handleM3U8ChannelData(w http.ResponseWriter, r *http.Request, escapedTitle,
 		}
 		l = c.Channel.ActiveLink
 		newLink := l.Link
-		handleM3U8ChannelData(w, r, escapedTitle, unescapedTitle, newLink, c, l)
+		handleM3U8ChannelData(w, r, title, newLink, c, l)
 	}
 
 	resp, err := getResponse(link, m3U8Timeout)
@@ -79,7 +80,7 @@ func handleM3U8ChannelData(w http.ResponseWriter, r *http.Request, escapedTitle,
 		c.newRedirectedLink(link)
 
 		linkRoot := c.LinkRoot()
-		prefix := "http://" + r.Host + "/iptv/" + *escapedTitle + "/"
+		prefix := "http://" + r.Host + "/iptv/" + url.PathEscape(*title) + "/"
 		content := rewriteLinks(bufio.NewScanner(resp.Body), prefix, linkRoot)
 
 		for k, v := range resp.Header {

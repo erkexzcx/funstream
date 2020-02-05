@@ -3,7 +3,6 @@ package proxy
 import (
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -19,17 +18,8 @@ func channelHandler(w http.ResponseWriter, r *http.Request) {
 	// Debug
 	log.Println("Received", reqPathParts)
 
-	// Unescape title
-	unescapedTitle, err := url.QueryUnescape(reqPathParts[0])
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("invalid request"))
-		log.Println("unable to escape title")
-		return
-	}
-
 	// Find channel
-	c, ok := playlist.Channels[unescapedTitle]
+	c, ok := playlist.Channels[reqPathParts[0]]
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("channel not found"))
@@ -65,11 +55,11 @@ func channelHandler(w http.ResponseWriter, r *http.Request) {
 	// Understand what do we need to do with this link
 	switch linkType {
 	case linkTypeUnknown:
-		handleLinkUnknown(w, r, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
+		handleLinkUnknown(w, r, &reqPathParts[0], link, c, c.ActiveLink)
 	case linkTypeMedia:
-		handleStream(w, r, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
+		handleStream(w, r, link, c, c.ActiveLink)
 	case linkTypeStream:
-		handleStream(w, r, &reqPathParts[0], &unescapedTitle, link, c, c.ActiveLink)
+		handleStream(w, r, link, c, c.ActiveLink)
 	case linkTypeM3U8:
 
 		c.ActiveLink.Mux.RLock()
@@ -85,10 +75,10 @@ func channelHandler(w http.ResponseWriter, r *http.Request) {
 
 		if len(reqPathParts) == 1 {
 			// Channel only
-			handleM3U8Channel(w, r, &reqPathParts[0], &unescapedTitle, newLink, m3u8c, c.ActiveLink)
+			handleM3U8Channel(w, r, &reqPathParts[0], newLink, m3u8c, c.ActiveLink)
 		} else {
 			// Channel with data (additional path)
-			handleM3U8ChannelData(w, r, &reqPathParts[0], &unescapedTitle, newLink, m3u8c, c.ActiveLink)
+			handleM3U8ChannelData(w, r, &reqPathParts[0], newLink, m3u8c, c.ActiveLink)
 		}
 	case linkTypeUnsupported:
 		w.WriteHeader(http.StatusServiceUnavailable)

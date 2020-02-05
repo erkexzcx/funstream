@@ -8,7 +8,7 @@ import (
 
 func logoHandler(w http.ResponseWriter, r *http.Request) {
 	title := strings.Replace(r.URL.Path, "/logo/", "", 1)
-	unescapedTitle, err := url.QueryUnescape(title)
+	unescapedTitle, err := url.PathUnescape(title)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid request"))
