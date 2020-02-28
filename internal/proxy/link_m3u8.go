@@ -26,7 +26,7 @@ func handleM3U8Channel(w http.ResponseWriter, r *http.Request, title *string, li
 
 	resp, err := getResponse(link, m3U8Timeout)
 	if err != nil {
-		log.Println("Failed to request link. Cycling and retrying...")
+		log.Println("Failed to request link. Cycling and retrying...", err, link)
 		cycleAndRetry()
 		return
 	}
@@ -64,12 +64,12 @@ func handleM3U8ChannelData(w http.ResponseWriter, r *http.Request, title *string
 	}
 
 	resp, err := getResponse(link, m3U8Timeout)
-	defer resp.Body.Close()
 	if err != nil {
-		log.Println("Failed to request link. Cycling and retrying...")
+		log.Println("Failed to request link. Cycling and retrying...", err, link)
 		cycleAndRetry()
 		return
 	}
+	defer resp.Body.Close()
 
 	// Find content type
 	contentTypeOrig := resp.Header.Get("Content-Type")

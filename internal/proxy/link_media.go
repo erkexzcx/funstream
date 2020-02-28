@@ -23,7 +23,7 @@ func handleStream(w http.ResponseWriter, r *http.Request, link string, c *Channe
 
 	resp, err := getResponse(link, m3U8Timeout)
 	if err != nil {
-		log.Println("Failed to request link. Cycling and retrying...")
+		log.Println("Failed to request link. Cycling and retrying...", err, link)
 		cycleAndRetry()
 		return
 	}

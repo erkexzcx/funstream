@@ -213,6 +213,7 @@ func (c *config) fillChannels(p *proxy.Playlist) {
 				}
 			}
 
+			log.Println("Added", chLink)
 			addChannel(chLogo, chGroup, chTitle, chLink)
 
 		nextChannel:

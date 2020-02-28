@@ -3,15 +3,25 @@ package proxy
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
 func channelHandler(w http.ResponseWriter, r *http.Request) {
-	reqPath := strings.Replace(r.URL.Path, "/iptv/", "", 1)
+	reqPath := strings.Replace(r.URL.RequestURI(), "/iptv/", "", 1)
 	reqPathParts := strings.SplitN(reqPath, "/", 2)
 	if len(reqPathParts) == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("not found"))
+		return
+	}
+
+	// Unescape channel title
+	var err error
+	reqPathParts[0], err = url.PathUnescape(reqPathParts[0])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid request"))
 		return
 	}
 

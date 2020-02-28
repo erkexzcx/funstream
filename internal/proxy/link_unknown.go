@@ -27,7 +27,7 @@ func handleLinkUnknown(w http.ResponseWriter, r *http.Request, title *string, li
 	// We don't know what to expect, so just load URL and check content type of response
 	resp, err := getResponse(link, -1)
 	if err != nil {
-		log.Println("Failed to request link. Cycling and retrying...")
+		log.Println("Failed to request link. Cycling and retrying...", err, link)
 		cycleAndRetry()
 		return
 	}

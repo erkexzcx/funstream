@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -30,9 +31,26 @@ func download(link string) (content []byte, contentType string, err error) {
 		return nil, "", errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
 	}
 
-	contentType = resp.Header.Get("Content-Type")
-	content, err = ioutil.ReadAll(resp.Body)
-	return
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		contentType = resp.Header.Get("Content-Type")
+		content, err = ioutil.ReadAll(resp.Body)
+		return
+	}
+
+	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+		linkURL, err := url.Parse(link)
+		if err != nil {
+			return nil, "", errors.New("Unknown error occurred")
+		}
+		redirectURL, err := url.Parse(resp.Header.Get("Location"))
+		if err != nil {
+			return nil, "", errors.New("Unknown error occurred")
+		}
+		newLink := linkURL.ResolveReference(redirectURL)
+		return download(newLink.String())
+	}
+
+	return nil, "", errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
 }
 
 func downloadString(link string) (content string, contentType string, err error) {
@@ -45,7 +63,11 @@ func downloadString(link string) (content string, contentType string, err error)
 }
 
 func getResponse(link string, timeout time.Duration) (*http.Response, error) {
-	client := &http.Client{}
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 	if timeout <= 0 {
 		client.Timeout = 10 * time.Second
 	}
@@ -62,9 +84,25 @@ func getResponse(link string, timeout time.Duration) (*http.Response, error) {
 		return nil, err
 	}
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		return resp, nil
 	}
 
-	return resp, nil
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+		linkURL, err := url.Parse(link)
+		if err != nil {
+			return nil, errors.New("Unknown error occurred")
+		}
+		redirectURL, err := url.Parse(resp.Header.Get("Location"))
+		if err != nil {
+			return nil, errors.New("Unknown error occurred")
+		}
+		newLink := linkURL.ResolveReference(redirectURL)
+		return getResponse(newLink.String(), timeout)
+	}
+
+	return nil, errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
+
 }
