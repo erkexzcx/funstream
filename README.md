@@ -14,24 +14,62 @@ Features:
 Features that *might* never be implemented:
 1. Define and edit EPG guides (in the same *funstream playlist*).
 2. Slow start to exclude not working IPTV channels.
-3. Docker image or SystemD service.
+3. Caching
+4. Docker image
 
-# Build
+# Installation (Linux OSes with SystemD)
 
-For now you need to compile it yourself:
+Make sure you read (#Documentation)[#Documentation] first!
+
+1. Clone this repo and build binary:
 ```
-go build ./cmd/funstream/funstream.go
-./funstream
+$ git clone git@github.com:erkexzcx/funstream.git
+$ cd funstream
+$ go build -o funstream ./cmd/funstream/funstream.go
 ```
 
-# Usage
+2. Move files into required paths:
+```
+# cp funstream /usr/bin/
+# mkdir /etc/funstream
+# cp <funstream_playlist.yml> /etc/funstream
+# cp funstream.service /etc/systemd/system/
+# systemctl daemon-reload
+```
+
+If you want to change port or any other command line argument - edit `/etc/systemd/system/funstream.service` line `ExecStart=`. Do not forget to re-run `systemctl daemon-reload` afterwards.
+
+3. Start and enable SystemD service:
+```
+# systemctl start funstream.service
+# systemctl enable funstream.service
+```
+
+# Upgrade
+
+1. Update local copy of this repo and re-build binary:
+```
+$ git pull
+$ go build -o funstream ./cmd/funstream/funstream.go
+```
+
+2. Replace existing binary with new binary:
+```
+# cp funstream /usr/bin/
+```
+
+If playlist format or systemd script has changed, then you might need to update these files too!
+
+# Documentation
+
+## Command line arguments
 
 Execute binary. These command-line options are optional and used if you are not happy with default values:
 * `-port 8989` - set custom web server's port. By default it uses `8989`.
 * `-useragent "VLC/3.0.2.LibVLC/3.0.2"` - set custom user agent. By default it uses what VLC use (`VLC/3.0.2.LibVLC/3.0.2`).
 * `-playlist "funstream_playlist.yaml"` - set location of your very personal funstream playlist. By default it uses `funstream_playlist.yaml` in current working directory.
 
-# Playlist customization
+## Playlist customization
 
 See [funstream_playlist.example.yaml](https://github.com/erkexzcx/funstream/blob/master/funstream_playlist.example.yaml).
 
