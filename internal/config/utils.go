@@ -50,13 +50,12 @@ func normalize(s string) string {
 	parts := strings.Fields(s)
 	for i := 0; i < len(parts); i++ {
 		if len(parts[i]) <= 3 {
-			parts[i] = strings.ToUpper(parts[i])
-		} else if parts[i] == "hd" {
-			parts[i] = strings.ToUpper(parts[i])
-		} else if parts[i][:2] == "tv" {
-			parts[i] = strings.ToUpper(parts[i][:2]) + parts[i][2:]
+			parts[i] = strings.ToTitle(parts[i]) // All uppercase
 		} else {
-			parts[i] = strings.ToUpper(parts[i][:1]) + parts[i][1:]
+			parts[i] = strings.Title(parts[i])
+		}
+		if strings.HasSuffix(parts[i], "tv") {
+			parts[i] = strings.TrimSuffix(parts[i], "tv") + "TV"
 		}
 	}
 	return strings.Join(parts, " ")
