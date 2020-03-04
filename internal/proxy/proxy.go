@@ -22,7 +22,7 @@ func (p *Playlist) Start(port, userAgentString string) {
 	http.HandleFunc("/iptv/", channelHandler)
 	http.HandleFunc("/logo/", logoHandler)
 
-	log.Println("Web server should be started by now!")
+	log.Println("Web server should be started!")
 
 	printAvailableAddresses(port)
 

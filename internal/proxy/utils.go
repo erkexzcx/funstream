@@ -6,72 +6,61 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"time"
+	"strings"
 )
 
-var httpClient = &http.Client{
-	Timeout: time.Second * 10,
+// StreamRequest represents HTTP request that is received from the user
+type StreamRequest struct {
+	Title   string
+	Suffix  string
+	Channel *Channel
 }
 
-func download(link string) (content []byte, contentType string, err error) {
-	req, err := http.NewRequest("GET", link, nil)
+func getStreamRequest(w http.ResponseWriter, r *http.Request, prefix string) (*StreamRequest, error) {
+	reqPath := strings.Replace(r.URL.RequestURI(), prefix, "", 1)
+	reqPathParts := strings.SplitN(reqPath, "/", 2)
+	if len(reqPathParts) == 0 {
+		return nil, errors.New("Bad request")
+	}
+
+	// Unescape channel title
+	var err error
+	reqPathParts[0], err = url.PathUnescape(reqPathParts[0])
 	if err != nil {
-		return nil, "", err
+		return nil, errors.New("Bad request")
 	}
 
-	req.Header.Set("User-Agent", userAgent)
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, "", errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
+	// Find channel reference
+	channel, ok := playlist.Channels[reqPathParts[0]]
+	if !ok {
+		return nil, errors.New("Bad request")
 	}
 
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		contentType = resp.Header.Get("Content-Type")
-		content, err = ioutil.ReadAll(resp.Body)
-		return
+	if len(reqPathParts) == 1 {
+		return &StreamRequest{reqPathParts[0], "", channel}, nil
 	}
-
-	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-		linkURL, err := url.Parse(link)
-		if err != nil {
-			return nil, "", errors.New("Unknown error occurred")
-		}
-		redirectURL, err := url.Parse(resp.Header.Get("Location"))
-		if err != nil {
-			return nil, "", errors.New("Unknown error occurred")
-		}
-		newLink := linkURL.ResolveReference(redirectURL)
-		return download(newLink.String())
-	}
-
-	return nil, "", errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
+	return &StreamRequest{reqPathParts[0], reqPathParts[1], channel}, nil
 }
 
 func downloadString(link string) (content string, contentType string, err error) {
-	var contentBytes []byte
-	contentBytes, contentType, err = download(link)
+	contentBytes, contentType, err := download(link)
 	if err != nil {
 		return "", "", err
 	}
 	return string(contentBytes), contentType, nil
 }
 
-func getResponse(link string, timeout time.Duration) (*http.Response, error) {
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
+func download(link string) (content []byte, contentType string, err error) {
+	resp, err := getResponse(link)
+	if err != nil {
+		return nil, "", err
 	}
-	if timeout <= 0 {
-		client.Timeout = 10 * time.Second
-	}
+	defer resp.Body.Close()
+	content, err = ioutil.ReadAll(resp.Body)
+	return content, resp.Header.Get("User-Agent"), err
+}
 
+func getResponse(link string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", link, nil)
 	if err != nil {
 		return nil, err
@@ -79,7 +68,7 @@ func getResponse(link string, timeout time.Duration) (*http.Response, error) {
 
 	req.Header.Set("User-Agent", userAgent)
 
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -88,9 +77,8 @@ func getResponse(link string, timeout time.Duration) (*http.Response, error) {
 		return resp, nil
 	}
 
-	defer resp.Body.Close()
-
 	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+		defer resp.Body.Close()
 		linkURL, err := url.Parse(link)
 		if err != nil {
 			return nil, errors.New("Unknown error occurred")
@@ -100,9 +88,8 @@ func getResponse(link string, timeout time.Duration) (*http.Response, error) {
 			return nil, errors.New("Unknown error occurred")
 		}
 		newLink := linkURL.ResolveReference(redirectURL)
-		return getResponse(newLink.String(), timeout)
+		return getResponse(newLink.String())
 	}
 
 	return nil, errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
-
 }
