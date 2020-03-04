@@ -54,45 +54,32 @@ func Playlist(configPath string, userAgentString string) (playlist *proxy.Playli
 	userAgent = userAgentString
 
 	log.Println("Reading config file...")
-
-	// Read config from file to struct
 	c, err := readConfig(configPath)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Println("Ensuring default values are there...")
-
-	// Fill default values (e.g. if user did not define default logo - insert one)
 	c.updateDefaults()
 
 	log.Println("Checking config for human errors...")
-
-	// Check for human errors
 	if err = c.validate(); err != nil {
 		return nil, err
 	}
 
 	log.Println("Normalizing cases in titles...")
-
-	// Normalize titles
 	c.normalizeEverything()
 
 	log.Println("Initiating empty internal playlist...")
-
-	// Initiate empty playlist, but define settings
 	p := &proxy.Playlist{
 		Channels: make(map[string]*proxy.Channel),
 	}
 
 	log.Println("Filling internal playlist...")
-
-	// Add channels to the playlist. Also download and parse define playlists from file
 	c.fillChannels(p)
 
-	log.Println("Sorting channels...")
-
 	// Create ordered titles list, using all available titles and titles provided in "DisplayFirst"
+	log.Println("Sorting channels...")
 	c.fillOrderedTitles(p)
 
 	return p, nil
@@ -213,7 +200,6 @@ func (c *config) fillChannels(p *proxy.Playlist) {
 				}
 			}
 
-			log.Println("Added", chLink)
 			addChannel(chLogo, chGroup, chTitle, chLink)
 
 		nextChannel:
