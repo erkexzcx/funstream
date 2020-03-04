@@ -11,8 +11,7 @@ func channelHandler(w http.ResponseWriter, r *http.Request) {
 	reqPath := strings.Replace(r.URL.RequestURI(), "/iptv/", "", 1)
 	reqPathParts := strings.SplitN(reqPath, "/", 2)
 	if len(reqPathParts) == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("not found"))
+		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
 
@@ -20,19 +19,16 @@ func channelHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	reqPathParts[0], err = url.PathUnescape(reqPathParts[0])
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("invalid request"))
+		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
 
-	// Debug
-	log.Println("Received", reqPathParts)
+	log.Println("Received", reqPathParts) // Debug
 
 	// Find channel
 	c, ok := playlist.Channels[reqPathParts[0]]
 	if !ok {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("channel not found"))
+		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
 
@@ -49,8 +45,7 @@ func channelHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Error if channel type is unknown and request URL contains additional path
 	if linkType == linkTypeUnknown && len(reqPathParts) == 2 {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("invalid request"))
+		http.Error(w, "invalid request", http.StatusBadRequest)
 		log.Println("channel type is unknown and request URL contains additional path")
 		return
 	}
@@ -91,10 +86,8 @@ func channelHandler(w http.ResponseWriter, r *http.Request) {
 			handleM3U8ChannelData(w, r, &reqPathParts[0], newLink, m3u8c, c.ActiveLink)
 		}
 	case linkTypeUnsupported:
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write([]byte("unsupported channel format"))
+		http.Error(w, "unsupported channel format", http.StatusServiceUnavailable)
 	default:
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("internal server error"))
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 	}
 }
