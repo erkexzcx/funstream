@@ -6,20 +6,39 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/patrickmn/go-cache"
 )
 
 var m3u8channels map[string]*M3U8Channel
+var m3u8cache = cache.New(time.Minute, 10*time.Second) // 1 minute expiration, clean every 10 sec
+
+// M3U8CacheElem represents M3U8 any media file cache
+type M3U8CacheElem struct {
+	content     *[]byte
+	contentType *string
+}
 
 // M3U8Channel stores information about m3u8 channel
 type M3U8Channel struct {
-	Channel  *Channel
-	link     string
-	linkRoot string
+	Channel       *Channel
+	link          string
+	linkCache     []byte
+	linkCreatedAt time.Time
+	linkRoot      string
 }
 
 func (c *M3U8Channel) newRedirectedLink(s string) {
 	c.link = s
 	c.linkRoot = deleteAfterLastSlash(s)
+}
+
+func (c *M3U8Channel) cacheValid() bool {
+	if c.linkCreatedAt.IsZero() || time.Now().Sub(c.linkCreatedAt).Seconds() > 2 {
+		return false
+	}
+	return true
 }
 
 func deleteAfterLastSlash(str string) string {

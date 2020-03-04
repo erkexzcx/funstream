@@ -23,7 +23,7 @@ func handleContentUnknown(w http.ResponseWriter, r *http.Request, sr *StreamRequ
 		sr.Channel.ActiveLink.M3u8Ref = &M3U8Channel{Channel: sr.Channel}
 		sr.Channel.ActiveLink.M3u8Ref.link = resp.Request.URL.String()
 		sr.Channel.ActiveLink.M3u8Ref.linkRoot = deleteAfterLastSlash(sr.Channel.ActiveLink.M3u8Ref.link)
-		handleEstablishedContentM3U8(w, r, sr, resp)
+		handleEstablishedContentM3U8(w, r, sr, resp, sr.Channel.ActiveLink.Link)
 	default:
 		http.Error(w, "invalid media type", http.StatusInternalServerError)
 	}
