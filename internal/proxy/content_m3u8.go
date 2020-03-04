@@ -9,14 +9,6 @@ import (
 )
 
 func handleContentM3U8(w http.ResponseWriter, r *http.Request, sr *StreamRequest) {
-	cycleAndRetry := func() {
-		if !sr.Channel.cycleLink() {
-			http.Error(w, "no working channels", http.StatusInternalServerError)
-			return
-		}
-		streamRequestHandler(w, r, sr)
-	}
-
 	var link string
 	if sr.Suffix == "" {
 		link = sr.Channel.ActiveLink.M3u8Ref.link
@@ -27,7 +19,7 @@ func handleContentM3U8(w http.ResponseWriter, r *http.Request, sr *StreamRequest
 	resp, err := getResponse(link)
 	if err != nil {
 		log.Println("Failed to request link. Cycling and retrying...", err, sr.Channel.ActiveLink.Link)
-		cycleAndRetry()
+		cycleAndRetry(w, r, sr)
 		return
 	}
 	defer resp.Body.Close()

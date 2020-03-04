@@ -8,18 +8,10 @@ import (
 )
 
 func handleContentMedia(w http.ResponseWriter, r *http.Request, sr *StreamRequest) {
-	cycleAndRetry := func() {
-		if !sr.Channel.cycleLink() {
-			http.Error(w, "no working channels", http.StatusInternalServerError)
-			return
-		}
-		streamRequestHandler(w, r, sr)
-	}
-
 	resp, err := getResponse(sr.Channel.ActiveLink.Link)
 	if err != nil {
 		log.Println("Failed to request link. Cycling and retrying...", err, sr.Channel.ActiveLink.Link)
-		cycleAndRetry()
+		cycleAndRetry(w, r, sr)
 		return
 	}
 	defer resp.Body.Close()

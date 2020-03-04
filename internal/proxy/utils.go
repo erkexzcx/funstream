@@ -9,6 +9,14 @@ import (
 	"strings"
 )
 
+func cycleAndRetry(w http.ResponseWriter, r *http.Request, sr *StreamRequest) {
+	if !sr.Channel.cycleLink() {
+		http.Error(w, "no working channels", http.StatusInternalServerError)
+		return
+	}
+	streamRequestHandler(w, r, sr)
+}
+
 // StreamRequest represents HTTP request that is received from the user
 type StreamRequest struct {
 	Title   string
