@@ -9,14 +9,13 @@ func logoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Find real URL of logo
 	sr.Channel.LogoCacheMux.Lock()
 	defer sr.Channel.LogoCacheMux.Unlock()
+
 	if len(sr.Channel.LogoCache) == 0 {
 		img, contentType, err := download(sr.Channel.Logo)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("internal server error"))
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 		sr.Channel.LogoCache = img
