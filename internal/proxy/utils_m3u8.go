@@ -2,64 +2,43 @@ package proxy
 
 import (
 	"bufio"
+	"io"
 	"net/url"
 	"regexp"
 	"strings"
-	"sync"
 	"time"
+
+	"github.com/patrickmn/go-cache"
 )
 
-const m3U8Timeout = 3 * time.Second
-
 var m3u8channels map[string]*M3U8Channel
+var m3u8cache = cache.New(time.Minute, 10*time.Second) // 1 minute expiration, clean every 10 sec
+
+// M3U8CacheElem represents M3U8 any media file cache
+type M3U8CacheElem struct {
+	content     *[]byte
+	contentType *string
+}
 
 // M3U8Channel stores information about m3u8 channel
 type M3U8Channel struct {
-	Channel *Channel
-
-	linkOneAtOnceMux sync.Mutex // To ensure that only one routine at once is accessing & updating link
-
-	link    string
-	linkMux sync.RWMutex
-
-	linkRoot    string
-	linkRootMux sync.RWMutex
+	Channel       *Channel
+	link          string
+	linkCache     []byte
+	linkCreatedAt time.Time
+	linkRoot      string
 }
 
-// Link ...
-func (c *M3U8Channel) Link() string {
-	c.linkMux.RLock()
-	defer c.linkMux.RUnlock()
-	return c.link
-}
-
-// SetLink ...
-func (c *M3U8Channel) SetLink(s string) {
-	c.linkMux.Lock()
-	defer c.linkMux.Unlock()
-	c.link = s
-}
-
-// LinkRoot ...
-func (c *M3U8Channel) LinkRoot() string {
-	c.linkRootMux.RLock()
-	defer c.linkRootMux.RUnlock()
-	return c.linkRoot
-}
-
-// SetLinkRoot ...
-func (c *M3U8Channel) SetLinkRoot(s string) {
-	c.linkRootMux.Lock()
-	defer c.linkRootMux.Unlock()
-	c.linkRoot = s
-}
-
-// ----------
-
-// Link ...
 func (c *M3U8Channel) newRedirectedLink(s string) {
-	c.SetLink(s)
-	c.SetLinkRoot(deleteAfterLastSlash(s))
+	c.link = s
+	c.linkRoot = deleteAfterLastSlash(s)
+}
+
+func (c *M3U8Channel) cacheValid() bool {
+	if c.linkCreatedAt.IsZero() || time.Now().Sub(c.linkCreatedAt).Seconds() > 2 {
+		return false
+	}
+	return true
 }
 
 func deleteAfterLastSlash(str string) string {
@@ -68,9 +47,9 @@ func deleteAfterLastSlash(str string) string {
 
 var reURILinkExtract = regexp.MustCompile(`URI="([^"]*)"`)
 
-func rewriteLinks(scanner *bufio.Scanner, prefix, linkRoot string) string {
+func rewriteLinks(rbody *io.ReadCloser, prefix, linkRoot string) string {
 	var sb strings.Builder
-
+	scanner := bufio.NewScanner(*rbody)
 	linkRootURL, _ := url.Parse(linkRoot) // It will act as a base URL for full URLs
 
 	modifyLink := func(link string) string {
