@@ -9,7 +9,6 @@ const (
 	linkTypeUnknown = 0
 	linkTypeM3U8    = 1
 	linkTypeMedia   = 2
-	// -1 for anything unrecognized
 )
 
 // Playlist stores list of *Channel as well as some other settings, such as on-top-of-the-list channels
