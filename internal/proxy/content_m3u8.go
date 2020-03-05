@@ -40,7 +40,7 @@ func handleEstablishedContentM3U8(w http.ResponseWriter, r *http.Request, sr *St
 		sr.Channel.ActiveLink.M3u8Ref.newRedirectedLink(link)
 
 		content := rewriteLinks(&resp.Body, prefix, sr.Channel.ActiveLink.M3u8Ref.linkRoot)
-		addHeaders(resp.Header, w.Header())
+		addHeaders(resp.Header, w.Header(), false)
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, content)
 	default: // media (or anything else)
