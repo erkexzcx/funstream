@@ -8,7 +8,7 @@ import (
 func handleContentUnknown(w http.ResponseWriter, r *http.Request, sr *StreamRequest) {
 	resp, err := getResponse(sr.Channel.ActiveLink.Link)
 	if err != nil {
-		log.Println("Link rquest failed. Trying next one...", err, sr.Channel.ActiveLink.Link)
+		log.Println("Link request failed. Trying next one...", err, sr.Channel.ActiveLink.Link)
 		cycleAndRetry(w, r, sr)
 		return
 	}

@@ -65,7 +65,7 @@ func download(link string) (content []byte, contentType string, err error) {
 	}
 	defer resp.Body.Close()
 	content, err = ioutil.ReadAll(resp.Body)
-	return content, resp.Header.Get("User-Agent"), err
+	return content, resp.Header.Get("Content-Type"), err
 }
 
 func getResponse(link string) (*http.Response, error) {
@@ -85,19 +85,24 @@ func getResponse(link string) (*http.Response, error) {
 		return resp, nil
 	}
 
-	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-		defer resp.Body.Close()
-		linkURL, err := url.Parse(link)
-		if err != nil {
-			return nil, errors.New("Unknown error occurred")
-		}
-		redirectURL, err := url.Parse(resp.Header.Get("Location"))
-		if err != nil {
-			return nil, errors.New("Unknown error occurred")
-		}
-		newLink := linkURL.ResolveReference(redirectURL)
-		return getResponse(newLink.String())
-	}
+	defer resp.Body.Close()
 
 	return nil, errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
+}
+
+func addHeaders(from, to http.Header) {
+	for k, v := range from {
+		switch k {
+		case "Connection":
+			from.Set("Connection", strings.Join(v, "; "))
+		case "Content-Type":
+			from.Set("Content-Type", strings.Join(v, "; "))
+		case "Transfer-Encoding":
+			from.Set("Transfer-Encoding", strings.Join(v, "; "))
+		case "Cache-Control":
+			from.Set("Cache-Control", strings.Join(v, "; "))
+		case "Date":
+			from.Set("Date", strings.Join(v, "; "))
+		}
+	}
 }

@@ -18,7 +18,7 @@ func handleContentM3U8(w http.ResponseWriter, r *http.Request, sr *StreamRequest
 
 	resp, err := getResponse(link)
 	if err != nil {
-		log.Println("Link rquest failed. Trying next one...", err, sr.Channel.ActiveLink.Link)
+		log.Println("Link request failed. Trying next one...", err, sr.Channel.ActiveLink.Link)
 		cycleAndRetry(w, r, sr)
 		return
 	}
@@ -40,9 +40,7 @@ func handleEstablishedContentM3U8(w http.ResponseWriter, r *http.Request, sr *St
 		sr.Channel.ActiveLink.M3u8Ref.newRedirectedLink(link)
 
 		content := rewriteLinks(&resp.Body, prefix, sr.Channel.ActiveLink.M3u8Ref.linkRoot)
-		for k, v := range resp.Header {
-			w.Header().Set(k, v[0])
-		}
+		addHeaders(resp.Header, w.Header())
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, content)
 	default: // media (or anything else)
