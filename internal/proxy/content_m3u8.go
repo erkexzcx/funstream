@@ -51,7 +51,7 @@ func handleEstablishedContentM3U8(w http.ResponseWriter, r *http.Request, sr *St
 	prefix := "http://" + r.Host + "/iptv/" + url.PathEscape(sr.Title) + "/"
 
 	switch {
-	case contentType == "application/vnd.apple.mpegurl" || contentType == "application/x-mpegurl":
+	case contentType == "application/vnd.apple.mpegurl" || contentType == "application/x-mpegurl": // media (or anything else)
 		// Update links in case of redirect
 		link := resp.Request.URL.String()
 		sr.Channel.ActiveLink.M3u8Ref.newRedirectedLink(link)
@@ -65,7 +65,7 @@ func handleEstablishedContentM3U8(w http.ResponseWriter, r *http.Request, sr *St
 
 		sr.Channel.ActiveLink.M3u8Ref.linkCache = []byte(content)
 		sr.Channel.ActiveLink.M3u8Ref.linkCreatedAt = time.Now()
-	default: /* media files (or anything else) */
+	default: // media (or anything else)
 		content, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			http.Error(w, "failed to fetch media file", http.StatusInternalServerError)
