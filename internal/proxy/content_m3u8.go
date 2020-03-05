@@ -34,7 +34,7 @@ func handleEstablishedContentM3U8(w http.ResponseWriter, r *http.Request, sr *St
 	prefix := "http://" + r.Host + "/iptv/" + url.PathEscape(sr.Title) + "/"
 
 	switch {
-	case contentType == "application/vnd.apple.mpegurl" || contentType == "application/x-mpegurl": // media (or anything else)
+	case contentType == "application/vnd.apple.mpegurl" || contentType == "application/x-mpegurl": // M3U8 metadata
 		// Update links in case of redirect
 		link := resp.Request.URL.String()
 		sr.Channel.ActiveLink.M3u8Ref.newRedirectedLink(link)
