@@ -18,7 +18,7 @@ func handleContentM3U8(w http.ResponseWriter, r *http.Request, sr *StreamRequest
 
 	resp, err := getResponse(link)
 	if err != nil {
-		log.Println("Failed to request link. Cycling and retrying...", err, sr.Channel.ActiveLink.Link)
+		log.Println("Link rquest failed. Trying next one...", err, sr.Channel.ActiveLink.Link)
 		cycleAndRetry(w, r, sr)
 		return
 	}
