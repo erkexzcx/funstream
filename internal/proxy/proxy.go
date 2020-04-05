@@ -39,10 +39,11 @@ func printAvailableAddresses(port string) {
 	}
 	for _, v := range addresses {
 		address := v.String()
-		if strings.Contains(address, "::") {
-			continue
+		if strings.Contains(address, ":") {
+			fmt.Println("\thttp://[" + strings.SplitN(address, "/", 2)[0] + "]:" + port + "/iptv") // IPv6
+		}else{
+			fmt.Println("\thttp://" + strings.SplitN(address, "/", 2)[0] + ":" + port + "/iptv") // IPv4
 		}
-		fmt.Println("\thttp://" + strings.SplitN(address, "/", 2)[0] + ":" + port + "/iptv")
 	}
 	fmt.Println()
 }
