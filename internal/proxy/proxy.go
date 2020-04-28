@@ -1,19 +1,16 @@
 package proxy
 
 import (
-	"fmt"
 	"log"
-	"net"
 	"net/http"
-	"strings"
 )
 
 var userAgent string
 
 // Start starts web server and servers playlist
-func (p *Playlist) Start(port, userAgentString string) {
+func (p *Playlist) Start(flagBind, flagUserAgent *string) {
 	playlist = p
-	userAgent = userAgentString
+	userAgent = *flagUserAgent
 
 	// Some global vars
 	m3u8channels = make(map[string]*M3U8Channel, len(p.Channels))
@@ -24,26 +21,5 @@ func (p *Playlist) Start(port, userAgentString string) {
 
 	log.Println("Web server should be started!")
 
-	printAvailableAddresses(port)
-
-	panic(http.ListenAndServe(":"+port, nil))
-}
-
-func printAvailableAddresses(port string) {
-	fmt.Println()
-	fmt.Println("Available URLs:")
-	addresses, err := net.InterfaceAddrs()
-	if err != nil {
-		fmt.Println("\tUnable to retrieve IP addresses...")
-		return
-	}
-	for _, v := range addresses {
-		address := v.String()
-		if strings.Contains(address, ":") {
-			fmt.Println("\thttp://[" + strings.SplitN(address, "/", 2)[0] + "]:" + port + "/iptv") // IPv6
-		}else{
-			fmt.Println("\thttp://" + strings.SplitN(address, "/", 2)[0] + ":" + port + "/iptv") // IPv4
-		}
-	}
-	fmt.Println()
+	panic(http.ListenAndServe(*flagBind, nil))
 }

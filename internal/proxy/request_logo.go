@@ -3,25 +3,25 @@ package proxy
 import "net/http"
 
 func logoHandler(w http.ResponseWriter, r *http.Request) {
-	sr, err := getStreamRequest(w, r, "/logo/")
+	cr, err := getContentRequest(w, r, "/logo/")
 	if err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
 
-	sr.Channel.LogoCacheMux.Lock()
-	defer sr.Channel.LogoCacheMux.Unlock()
+	cr.Channel.LogoCacheMux.Lock()
+	defer cr.Channel.LogoCacheMux.Unlock()
 
-	if len(sr.Channel.LogoCache) == 0 {
-		img, contentType, err := download(sr.Channel.Logo)
+	if len(cr.Channel.LogoCache) == 0 {
+		img, contentType, err := download(cr.Channel.Logo)
 		if err != nil {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-		sr.Channel.LogoCache = img
-		sr.Channel.LogoCacheContentType = contentType
+		cr.Channel.LogoCache = img
+		cr.Channel.LogoCacheContentType = contentType
 	}
 
-	w.Header().Set("Content-Type", sr.Channel.LogoCacheContentType)
-	w.Write(sr.Channel.LogoCache)
+	w.Header().Set("Content-Type", cr.Channel.LogoCacheContentType)
+	w.Write(cr.Channel.LogoCache)
 }

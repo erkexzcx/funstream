@@ -1,4 +1,4 @@
-package config
+package playlist
 
 import (
 	"errors"
@@ -50,11 +50,11 @@ type config struct {
 }
 
 // Playlist returns generated playlist out of configuration file.
-func Playlist(configPath string, userAgentString string) (playlist *proxy.Playlist, err error) {
-	userAgent = userAgentString
+func Playlist(flagPlaylist, flagUserAgent *string) (playlist *proxy.Playlist, err error) {
+	userAgent = *flagUserAgent
 
 	log.Println("Reading config file...")
-	c, err := readConfig(configPath)
+	c, err := readConfig(*flagPlaylist)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (c *config) fillChannels(p *proxy.Playlist) {
 			// Channel does not exist, so create new with given link
 			channel = &proxy.Channel{
 				Links: []proxy.Link{
-					proxy.Link{Link: link},
+					{Link: link},
 				},
 			}
 			channel.ActiveLink = &channel.Links[0]

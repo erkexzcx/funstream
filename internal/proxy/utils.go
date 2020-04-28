@@ -9,45 +9,45 @@ import (
 	"strings"
 )
 
-func cycleAndRetry(w http.ResponseWriter, r *http.Request, sr *StreamRequest) {
-	if !sr.Channel.cycleLink() {
+func cycleAndRetry(w http.ResponseWriter, r *http.Request, cr *ContentRequest) {
+	if !cr.Channel.cycleLink() {
 		http.Error(w, "no working channels", http.StatusInternalServerError)
 		return
 	}
-	streamRequestHandler(w, r, sr)
+	contentRequestHandler(w, r, cr)
 }
 
-// StreamRequest represents HTTP request that is received from the user
-type StreamRequest struct {
+// ContentRequest represents HTTP request that is received from the user
+type ContentRequest struct {
 	Title   string
 	Suffix  string
 	Channel *Channel
 }
 
-func getStreamRequest(w http.ResponseWriter, r *http.Request, prefix string) (*StreamRequest, error) {
+func getContentRequest(w http.ResponseWriter, r *http.Request, prefix string) (*ContentRequest, error) {
 	reqPath := strings.Replace(r.URL.RequestURI(), prefix, "", 1)
 	reqPathParts := strings.SplitN(reqPath, "/", 2)
 	if len(reqPathParts) == 0 {
-		return nil, errors.New("Bad request")
+		return nil, errors.New("bad request")
 	}
 
 	// Unescape channel title
 	var err error
 	reqPathParts[0], err = url.PathUnescape(reqPathParts[0])
 	if err != nil {
-		return nil, errors.New("Bad request")
+		return nil, err
 	}
 
 	// Find channel reference
 	channel, ok := playlist.Channels[reqPathParts[0]]
 	if !ok {
-		return nil, errors.New("Bad request")
+		return nil, errors.New("bad request")
 	}
 
 	if len(reqPathParts) == 1 {
-		return &StreamRequest{reqPathParts[0], "", channel}, nil
+		return &ContentRequest{reqPathParts[0], "", channel}, nil
 	}
-	return &StreamRequest{reqPathParts[0], reqPathParts[1], channel}, nil
+	return &ContentRequest{reqPathParts[0], reqPathParts[1], channel}, nil
 }
 
 func downloadString(link string) (content string, contentType string, err error) {
@@ -59,7 +59,7 @@ func downloadString(link string) (content string, contentType string, err error)
 }
 
 func download(link string) (content []byte, contentType string, err error) {
-	resp, err := getResponse(link)
+	resp, err := response(link)
 	if err != nil {
 		return nil, "", err
 	}
@@ -77,7 +77,7 @@ var httpClient = &http.Client{
 	},
 }
 
-func getResponse(link string) (*http.Response, error) {
+func response(link string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", link, nil)
 	if err != nil {
 		return nil, err
@@ -106,7 +106,7 @@ func getResponse(link string) (*http.Response, error) {
 			return nil, errors.New("Unknown error occurred")
 		}
 		newLink := linkURL.ResolveReference(redirectURL)
-		return getResponse(newLink.String())
+		return response(newLink.String())
 	}
 
 	return nil, errors.New(link + " returned HTTP code " + strconv.Itoa(resp.StatusCode))
