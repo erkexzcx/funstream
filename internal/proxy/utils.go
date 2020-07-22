@@ -116,18 +116,18 @@ func addHeaders(from, to http.Header, contentLength bool) {
 	for k, v := range from {
 		switch k {
 		case "Connection":
-			from.Set("Connection", strings.Join(v, "; "))
+			to.Set("Connection", strings.Join(v, "; "))
 		case "Content-Type":
-			from.Set("Content-Type", strings.Join(v, "; "))
+			to.Set("Content-Type", strings.Join(v, "; "))
 		case "Transfer-Encoding":
-			from.Set("Transfer-Encoding", strings.Join(v, "; "))
+			to.Set("Transfer-Encoding", strings.Join(v, "; "))
 		case "Cache-Control":
-			from.Set("Cache-Control", strings.Join(v, "; "))
+			to.Set("Cache-Control", strings.Join(v, "; "))
 		case "Date":
-			from.Set("Date", strings.Join(v, "; "))
+			to.Set("Date", strings.Join(v, "; "))
 		case "Content-Length":
 			if contentLength {
-				from.Set("Content-Length", strings.Join(v, "; "))
+				to.Set("Content-Length", strings.Join(v, "; "))
 			}
 		}
 	}
