@@ -50,7 +50,8 @@ func rewriteLinks(rbody *io.ReadCloser, prefix, linkRoot string) string {
 			l = link
 		}
 
-		return prefix + l
+		newurl, _ := url.Parse(prefix + l)
+		return newurl.RequestURI()
 	}
 
 	for scanner.Scan() {
