@@ -1,5 +1,3 @@
-**Disclaimer 1 - features, command line options and playlist format is likelly going to change in the near future once more testing and feedback is received. This also means that I will not provide binaries for a while, since everything is a subject to change. Performance is also questionable, but it will be improved over time.**
-
 # funstream
 
 This application is used to create your very own M3U (HLS) playlist. Application requires a special *funstream playlist*, which contains information about other sources, such as separate M3U8 channels, media files or M3U playlists. It also allows you to customize defined external sources, such as overriding logo URL, changing or exluding both channel names and groups.
