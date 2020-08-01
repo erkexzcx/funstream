@@ -53,7 +53,7 @@ func (c *Channel) cycleLink() bool {
 	c.ActiveLink = &c.Links[c.ActiveLinkIndex]
 
 	c.CycleCount++
-	if c.CycleCount >= len(c.Links)*2 {
+	if c.CycleCount == len(c.Links) {
 		c.CycleCount = 0
 		return false
 	}
