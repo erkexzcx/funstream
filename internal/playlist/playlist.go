@@ -183,7 +183,7 @@ func (c *config) fillChannels(p *proxy.Playlist) {
 			}
 			for _, renameChannel := range v.RenameChannels {
 				if renameChannel.From == chTitle {
-					chGroup = renameChannel.To
+					chTitle = renameChannel.To
 					break
 				}
 			}
