@@ -10,6 +10,7 @@ import (
 )
 
 func cycleAndRetry(w http.ResponseWriter, r *http.Request, cr *ContentRequest) {
+	cr.Channel.ActiveLink.Link = cr.Channel.ActiveLink.OriginalLink
 	if !cr.Channel.cycleLink() {
 		http.Error(w, "no working channels", http.StatusInternalServerError)
 		return

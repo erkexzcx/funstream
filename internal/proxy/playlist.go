@@ -36,9 +36,10 @@ type Channel struct {
 
 // Link stores actual link to channel + reference to M3U8 channel if it's M3U8 type.
 type Link struct {
-	Link     string       // Actual link
-	LinkType int          // Default is 0 (unknown)
-	M3u8Ref  *M3U8Channel // Reference. For non M3U8 channels it will be empty
+	Link         string       // Actual link
+	LinkType     int          // Default is 0 (unknown)
+	M3u8Ref      *M3U8Channel // Reference. For non M3U8 channels it will be empty
+	OriginalLink string       // Keep original URL and restore it on failure. For non M3U8 channels it will be empty
 }
 
 var playlist *Playlist
