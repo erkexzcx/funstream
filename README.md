@@ -1,5 +1,8 @@
 # funstream
 
+[![Build Status](https://travis-ci.com/erkexzcx/funstream.svg?branch=master)](https://travis-ci.com/erkexzcx/funstream) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/erkexzcx/funstream)](https://goreportcard.com/report/github.com/erkexzcx/funstream)
+
 **Disclaimer**: This software is still Work-In-Progress and many features/configuration options will change in the future.
 
 **Funstream** allows you to build your very own HLS (M3U) playlist and proxy all its requests through this application. You can create such playlist out of separate M3U8 IPTV channels, other M3U playlist, remote/local media files. On top of that you can customize category names, channel names and logo URLs.
