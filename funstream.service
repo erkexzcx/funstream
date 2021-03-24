@@ -1,12 +1,13 @@
 [Unit]
 Description=Funstream service
-After=network.target
- 
+After=network-online.target
+
 [Service]
-Type=simple
-WorkingDirectory=/etc/funstream
-ExecStart=/usr/bin/funstream
+User=myuser
+Group=myuser
+ExecStart=/home/myuser/funstream -playlist /home/myuser/funstream.yml -bind 0.0.0.0:5555
 Restart=on-failure
- 
+RestartSec=3
+
 [Install]
 WantedBy=multi-user.target

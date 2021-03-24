@@ -1,3 +1,5 @@
-funstream_playlist.yaml
-funstream
-dist
+/*.yml
+!/funstream.example.yml
+!/.travis.yml
+
+/funstream

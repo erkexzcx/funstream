@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/erkexzcx/funstream/internal/proxy"
+	"github.com/erkexzcx/funstream/proxy"
 	"gopkg.in/yaml.v2"
 )
 
@@ -16,8 +16,6 @@ const (
 	defaultLogo  = ""
 	defaultGroup = "Unknown"
 )
-
-var userAgent string
 
 // config holds configuration from yaml file.
 type config struct {
@@ -50,9 +48,7 @@ type config struct {
 }
 
 // Playlist returns generated playlist out of configuration file.
-func Playlist(flagPlaylist, flagUserAgent *string) (playlist *proxy.Playlist, err error) {
-	userAgent = *flagUserAgent
-
+func Playlist(flagPlaylist *string) (playlist *proxy.Playlist, err error) {
 	log.Println("Reading config file...")
 	c, err := readConfig(*flagPlaylist)
 	if err != nil {

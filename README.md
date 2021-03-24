@@ -1,76 +1,31 @@
 # funstream
 
-This application is used to create your very own M3U (HLS) playlist. Application requires a special *funstream playlist*, which contains information about other sources, such as separate M3U8 channels, media files or M3U playlists. It also allows you to customize defined external sources, such as overriding logo URL, changing or exluding both channel names and groups.
+**Disclaimer**: This software is still Work-In-Progress and many features/configuration options will change in the future.
 
-Features:
-* Supports HLS (M3U8), streams (`Content-Type: application/octet-stream`), audio and Video files.
-* No `FFmpeg` dependency - very lightweight and written in pure Go.
-* Flexible *funstream playlists*. See bottom of this README.md
+**Funstream** allows you to build your very own HLS (M3U) playlist and proxy all its requests through this application. You can create such playlist out of separate M3U8 IPTV channels, other M3U playlist, remote/local media files. On top of that you can customize category names, channel names and logo URLs.
 
-# Roadmap
+Some IPTV channels can be duplicates (e.g. if you combined 2 M3U playlists) and in such cases, this application works as Active-Backup mechanism, so if first used channel stops working, the second one would be used instead. :)
 
-Features that *might* never be implemented:
-1. Define and edit EPG guides (in the same *funstream playlist*).
-2. Docker image
-3. Proper versioning
+Advantages:
+* Create single HLS (M3U) playlist out of multiple different HLs playlists, separate channels, external or internal media files.
+* Proxy all the traffic through this application, effectively hiding viewer's original source IP from media source.
+* Active-backup high availability for duplicating channels (e.g. if you combined 2 HLS playlists).
 
-# Installation (Linux OSes with SystemD)
+Disadvantages/missing features:
+* No EPG support
+* Based on reverse-engineering. Expect some channels/configurations not to work at all.
+* No caching (if 5 viewers are watching the same IPTV channel at the same time, then IPTV channel will receive 5x more requests).
 
-Make sure you read (#Documentation)[#Documentation] first!
+# Usage
 
-1. Clone this repo and build binary:
-```
-$ git clone git@github.com:erkexzcx/funstream.git
-$ cd funstream
-$ go build -o funstream ./cmd/funstream/funstream.go
-```
+## 1. Create playlist file
 
-2. Move files into required paths:
-```
-# cp funstream /usr/bin/
-# mkdir /etc/funstream
-# cp <funstream_playlist.yml> /etc/funstream
-# cp funstream.service /etc/systemd/system/
-# systemctl daemon-reload
+```bash
+cp funstream.example.yml funstream.yml
+vim funstream.yml
 ```
 
-If you want to change port or any other command line argument - edit `/etc/systemd/system/funstream.service` line `ExecStart=`. Do not forget to re-run `systemctl daemon-reload` afterwards.
-
-3. Start and enable SystemD service:
-```
-# systemctl start funstream.service
-# systemctl enable funstream.service
-```
-
-# Upgrade
-
-1. Update local copy of this repo and re-build binary:
-```
-$ git pull
-$ go build -o funstream ./cmd/funstream/funstream.go
-```
-
-2. Replace existing binary with new binary:
-```
-# cp funstream /usr/bin/
-```
-
-If playlist format or systemd script has changed, then you might need to update these files too!
-
-# Documentation
-
-## Command line arguments
-
-Execute binary. These command-line options are optional and used if you are not happy with default values:
-* `-port 8989` - set custom web server's port. By default it uses `8989`.
-* `-useragent "VLC/3.0.2.LibVLC/3.0.2"` - set custom user agent. By default it uses what VLC use (`VLC/3.0.2.LibVLC/3.0.2`).
-* `-playlist "funstream_playlist.yaml"` - set location of your very personal funstream playlist. By default it uses `funstream_playlist.yaml` in current working directory.
-
-## Playlist customization
-
-See [funstream_playlist.example.yaml](https://github.com/erkexzcx/funstream/blob/master/funstream_playlist.example.yaml).
-
-You don't need to explicitly define all fields. For example, this simple one-channel `yaml` file would perfectly work:
+You don't need to explicitly define all fields. For example, this simple one-channel `yml` file would perfectly work:
 ```
 channels:
   - title: ExampleTV
@@ -78,3 +33,44 @@ channels:
     logo: http://example.com/logos/exampletv.png
     group: Example TVs
 ```
+
+## 2. Build application
+
+First, you have to download & install Golang from [here](https://golang.org/doc/install). DO NOT install Golang from the official repositories because they contain outdated version which is not working with this project.
+
+To ensure Golang is installed successfully, test it with `go version` command. Example:
+```bash
+$ go version
+go version go1.16.2 linux/amd64
+```
+
+Then build the application and test it:
+```bash
+go build -ldflags="-s -w" -o "funstream" ./cmd/funstream/main.go
+./funstream -help
+./funstream -playlist funstream.yml -bind 0.0.0.0:5555
+```
+
+If you decide to edit the code, you can quickly test if it works without compiling it:
+```bash
+go run ./cmd/funstream/main.go -help
+go run ./cmd/funstream/main.go -bind 0.0.0.0:5555
+```
+
+## 4. Run application
+
+I suggest first testing with CURL:
+```bash
+curl http://<ipaddr>:8888/iptv
+```
+
+You can use above URL in VLC/Kodi. :)
+
+## 5. Installation guidelines
+
+1. Copy/paste file `funstream.service` to `/etc/systemd/system/funstream.service`.
+2. Edit `/etc/systemd/system/funstream.service` file and replace `myuser` with your non-root user. Also change paths if necessary.
+3. Perform `systemctl daemon-reload`.
+4. Use `systemctl <enable/disable/start/stop> funstream.service` to manage this service.
+
+P.S. Sorry for those who are looking for binary releases or dockerfile - I will consider it when this project becomes more stable.

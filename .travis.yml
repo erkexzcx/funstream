@@ -1,0 +1,6 @@
+  language: go
+go: 
+ - 1.16.2
+ - master
+
+script: go build -ldflags="-s -w" ./cmd/funstream/main.go

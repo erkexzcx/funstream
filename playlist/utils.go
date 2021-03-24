@@ -20,7 +20,7 @@ func download(link string) ([]byte, error) {
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("User-Agent", "VLC/3.0.2.LibVLC/3.0.2")
 
 	resp, err := httpClient.Do(req)
 	if err != nil {

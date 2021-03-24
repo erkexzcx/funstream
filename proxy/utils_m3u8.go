@@ -8,18 +8,11 @@ import (
 	"strings"
 )
 
-var m3u8channels map[string]*M3U8Channel
-
 // M3U8Channel stores information about m3u8 channel
 type M3U8Channel struct {
 	Channel  *Channel
 	link     string
 	linkRoot string
-}
-
-func (c *M3U8Channel) newRedirectedLink(s string) {
-	c.link = s
-	c.linkRoot = deleteAfterLastSlash(s)
 }
 
 func deleteAfterLastSlash(str string) string {

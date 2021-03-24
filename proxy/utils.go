@@ -51,14 +51,6 @@ func getContentRequest(w http.ResponseWriter, r *http.Request, prefix string) (*
 	return &ContentRequest{reqPathParts[0], reqPathParts[1], channel}, nil
 }
 
-func downloadString(link string) (content string, contentType string, err error) {
-	contentBytes, contentType, err := download(link)
-	if err != nil {
-		return "", "", err
-	}
-	return string(contentBytes), contentType, nil
-}
-
 func download(link string) (content []byte, contentType string, err error) {
 	resp, err := response(link)
 	if err != nil {
@@ -84,7 +76,7 @@ func response(link string) (*http.Response, error) {
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("User-Agent", "VLC/3.0.2.LibVLC/3.0.2")
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -100,11 +92,11 @@ func response(link string) (*http.Response, error) {
 	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
 		linkURL, err := url.Parse(link)
 		if err != nil {
-			return nil, errors.New("Unknown error occurred")
+			return nil, errors.New("unknown error occurred")
 		}
 		redirectURL, err := url.Parse(resp.Header.Get("Location"))
 		if err != nil {
-			return nil, errors.New("Unknown error occurred")
+			return nil, errors.New("unknown error occurred")
 		}
 		newLink := linkURL.ResolveReference(redirectURL)
 		return response(newLink.String())
